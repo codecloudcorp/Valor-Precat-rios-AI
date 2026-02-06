@@ -19,14 +19,11 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
         
-        // Converte a string do application.properties em lista
+        // Split por vírgula para suportar múltiplas URLs da variável do Railway
         config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         
-        // Permite todos os métodos (POST, OPTIONS, etc) e todos os Headers
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
-        
-        // Necessário para que o navegador não bloqueie a resposta
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
