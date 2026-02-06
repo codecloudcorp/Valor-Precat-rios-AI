@@ -22,10 +22,10 @@ public class EmailService {
     private String resendApiKey;
 
     public EmailService(WebClient.Builder webClientBuilder) {
-        // Configura um HttpClient com timeout explícito para evitar que a conexão morra no Railway
+        // Criando um cliente com timeouts explícitos para o Railway não "matar" a conexão
         HttpClient httpClient = HttpClient.create()
-                .responseTimeout(Duration.ofSeconds(15))
-                .resolver(spec -> spec.queryTimeout(Duration.ofSeconds(5)));
+                .responseTimeout(Duration.ofSeconds(15)) // Espera até 15s pela Resend
+                .resolver(spec -> spec.queryTimeout(Duration.ofSeconds(5))); // Timeout de DNS de 5s
 
         this.webClient = webClientBuilder
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
@@ -34,7 +34,7 @@ public class EmailService {
     }
 
     public void enviarNotificacaoProposta(String nome, String telefone, String valor, String emailCliente, String mensagemCliente) {
-        System.out.println("🚀 Tentando enviar proposta via API para: " + destinatarioFinal);
+        System.out.println("🚀 Tentativa de envio para: " + destinatarioFinal);
         
         String corpo = String.format("""
             ================================================
@@ -52,8 +52,8 @@ public class EmailService {
     }
 
     public void enviarNotificacaoParceiro(String nome, String telefone, String email, String cpfCnpj, 
-                                          String cidade, String profissao, String atua, String leads, String desc) {
-        System.out.println("🤝 Tentando enviar parceiro via API para: " + destinatarioFinal);
+                                          String city, String profession, String atua, String leads, String desc) {
+        System.out.println("🤝 Tentativa de envio de parceiro para: " + destinatarioFinal);
 
         String corpo = String.format("""
             ================================================
@@ -69,7 +69,7 @@ public class EmailService {
             📊 Leads/mês: %s
             📝 SOBRE: %s
             ================================================""", 
-            nome, telefone, email, cpfCnpj, cidade, profissao, atua, leads, desc);
+            nome, telefone, email, cpfCnpj, city, profession, atua, leads, desc);
 
         enviarPelaAPI("🤝 Novo Cadastro de Parceiro: " + nome, corpo);
     }
@@ -87,13 +87,12 @@ public class EmailService {
             ))
             .retrieve()
             .bodyToMono(String.class)
-            // Aumentamos o intervalo entre tentativas para 5 segundos
-            .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(5))) 
+            .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(5))) // Tenta a cada 5 segundos
             .subscribe(
-                response -> System.out.println("✅ RESEND CONFIRMOU RECEBIMENTO: " + response),
+                response -> System.out.println("✅ RESEND CONFIRMOU ENVIO: " + response),
                 error -> {
-                    System.err.println("❌ FALHA FINAL APÓS RETRIES: " + error.getMessage());
-                    // Se o erro for 403, é sua chave. Se for Timeout, é a rede do Railway.
+                    System.err.println("❌ FALHA FINAL: " + error.getMessage());
+                    // Se o erro disser "403 Forbidden", sua chave no Railway está errada ou sem permissão.
                 }
             );
     }
