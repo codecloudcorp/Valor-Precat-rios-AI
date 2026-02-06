@@ -8,12 +8,10 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 public class CorsConfig {
 
-    // Lê a variável 'cors.allowed.origins' do application.properties ou Variável de Ambiente
     @Value("${cors.allowed.origins}")
     private String allowedOrigins;
 
@@ -21,14 +19,16 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
         
-        // Separa a string por vírgula e remove espaços em branco
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        config.setAllowedOrigins(origins);
+        // Converte a string do application.properties em lista
+        config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         
+        // Permite todos os métodos (POST, OPTIONS, etc) e todos os Headers
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         
-        // config.setAllowCredentials(true);
+        // Necessário para que o navegador não bloqueie a resposta
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
