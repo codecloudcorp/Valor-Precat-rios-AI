@@ -1,7 +1,8 @@
-import { ChatMessage, PartnerDTO, ProposalDTO } from "../types";
+import { PartnerDTO, ProposalDTO } from "../types";
 
 // Usa a variável de ambiente se existir (Produção), senão usa localhost (Desenvolvimento)
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
 export const apiService = {
   // 1. Chatbot com Streaming
   async sendMessageStream(history: { role: string; parts: { text: string }[] }[], message: string): Promise<ReadableStreamDefaultReader<Uint8Array>> {
@@ -23,7 +24,13 @@ export const apiService = {
     const response = await fetch(`${API_URL}/proposal`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify({
+        nome: data.nome,
+        telefone: data.telefone,
+        email: data.email,
+        valor: data.valorEstimado, // Mapeia para o campo 'valor' do Java
+        mensagemCliente: data.mensagem // Mapeia para o campo 'mensagemCliente' do Java
+      })
     });
 
     if (!response.ok) {
@@ -36,7 +43,17 @@ export const apiService = {
     const response = await fetch(`${API_URL}/partner`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify({
+        nome: data.nome,
+        telefone: data.telefone,
+        email: data.email,
+        cpfCnpj: data.cpfCnpj,
+        cidade: data.cidadeEstado, // Mapeia para 'cidade' no Java
+        profissao: data.profissao,
+        atua: data.atuaComPrecatorios, // Mapeia para 'atua' no Java
+        leads: data.mediaLeads, // Mapeia para 'leads' no Java
+        desc: data.descricao // Mapeia para 'desc' no Java
+      })
     });
 
     if (!response.ok) {

@@ -16,10 +16,8 @@ const ChatAssistant: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  // Ref para o container de mensagens (para o scroll funcionar direito)
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // --- LISTA COMPLETA DE OPÇÕES (Sincronizada com o Backend Java) ---
   const quickQuestions = [
     "Quero uma Avaliação 💲",
     "Como funciona o pagamento?",
@@ -31,7 +29,6 @@ const ChatAssistant: React.FC = () => {
     "Falar com atendente"
   ];
 
-  // Função de scroll suave que NÃO mexe na página principal
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTo({
@@ -86,10 +83,12 @@ const ChatAssistant: React.FC = () => {
         
         const chunk = decoder.decode(value, { stream: true });
         
-        // Limpeza do protocolo SSE do Java
+        // Limpeza aprimorada do protocolo SSE do Java (Data: content)
         const cleanChunk = chunk
-            .replace(/^data: ?/gm, '') 
-            .replace(/\n\n$/, '');
+            .split('\n')
+            .filter(line => line.startsWith('data:'))
+            .map(line => line.replace(/^data: ?/, ''))
+            .join('');
         
         fullResponse += cleanChunk;
         
@@ -99,7 +98,6 @@ const ChatAssistant: React.FC = () => {
             : msg
         ));
         
-        // Rolar suavemente APENAS o chat enquanto o texto é gerado
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
@@ -142,7 +140,7 @@ const ChatAssistant: React.FC = () => {
 
       {/* Messages Area */}
       <div 
-        ref={chatContainerRef} // Ref aplicada aqui para controlar o scroll
+        ref={chatContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50 scroll-smooth"
       >
         {messages.map((msg) => (
@@ -171,8 +169,6 @@ const ChatAssistant: React.FC = () => {
 
       {/* Input & Quick Actions */}
       <div className="bg-white border-t border-slate-200">
-        
-        {/* Barra de Ações Rápidas (Scroll Horizontal) */}
         <div className="px-4 pt-3 pb-1 overflow-x-auto flex gap-2 scrollbar-hide">
             {quickQuestions.map((q, idx) => (
                 <button 
