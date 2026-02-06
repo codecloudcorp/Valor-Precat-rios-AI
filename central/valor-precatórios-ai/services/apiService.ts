@@ -2,6 +2,7 @@ import { PartnerDTO, ProposalDTO } from "../types";
 
 // Usa a variável de ambiente se existir (Produção), senão usa localhost (Desenvolvimento)
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+// src/services/apiService.ts
 
 export const apiService = {
   // 1. Chatbot com Streaming
@@ -19,7 +20,7 @@ export const apiService = {
     return response.body.getReader();
   },
 
-  // 2. Enviar Proposta
+  // 2. Enviar Proposta - SINCRONIZADO COM O JAVA
   async sendProposal(data: ProposalDTO): Promise<void> {
     const response = await fetch(`${API_URL}/proposal`, {
       method: 'POST',
@@ -28,8 +29,8 @@ export const apiService = {
         nome: data.nome,
         telefone: data.telefone,
         email: data.email,
-        valor: data.valorEstimado, // Mapeia para o campo 'valor' do Java
-        mensagemCliente: data.mensagem // Mapeia para o campo 'mensagemCliente' do Java
+        valorEstimado: data.valorEstimado, // Nome exato no ProposalRequest.java
+        mensagem: data.mensagem            // Nome exato no ProposalRequest.java
       })
     });
 
@@ -38,7 +39,7 @@ export const apiService = {
     }
   },
 
-  // 3. Cadastrar Parceiro
+  // 3. Cadastrar Parceiro - SINCRONIZADO COM O JAVA
   async registerPartner(data: PartnerDTO): Promise<void> {
     const response = await fetch(`${API_URL}/partner`, {
       method: 'POST',
@@ -48,11 +49,11 @@ export const apiService = {
         telefone: data.telefone,
         email: data.email,
         cpfCnpj: data.cpfCnpj,
-        cidade: data.cidadeEstado, // Mapeia para 'cidade' no Java
+        cidadeEstado: data.cidadeEstado, // Nome exato no PartnerRequest.java
         profissao: data.profissao,
-        atua: data.atuaComPrecatorios, // Mapeia para 'atua' no Java
-        leads: data.mediaLeads, // Mapeia para 'leads' no Java
-        desc: data.descricao // Mapeia para 'desc' no Java
+        atuaComPrecatorios: data.atuaComPrecatorios, // Nome exato no PartnerRequest.java
+        mediaLeads: data.mediaLeads,
+        descricao: data.descricao
       })
     });
 

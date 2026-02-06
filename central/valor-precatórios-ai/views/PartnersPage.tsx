@@ -1,12 +1,72 @@
 import React, { useState } from 'react';
-import { CheckCircle2, DollarSign, LayoutDashboard, Bot, FileText, Headphones, ArrowRight, Briefcase, User, Mail, Phone, MapPin, Send } from 'lucide-react';
+import { CheckCircle2, DollarSign, LayoutDashboard, Bot, FileText, Headphones, ArrowRight, Briefcase, User, Mail, Phone, MapPin, Send, X, ShieldCheck, BellRing } from 'lucide-react';
 import { apiService } from '../services/apiService';
 import { PartnerDTO } from '../types';
 
+// --- COMPONENTE DO MODAL DE TERMOS ---
+const TermsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden animate-in zoom-in duration-300">
+        
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <FileText className="text-blue-600" size={24} />
+            Termos de Parceria
+          </h3>
+          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+            <X size={20} className="text-slate-500" />
+          </button>
+        </div>
+
+        {/* Conteúdo */}
+        <div className="flex-1 overflow-y-auto p-8 text-slate-600 space-y-6 text-sm leading-relaxed">
+          <section>
+            <h4 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
+              <ShieldCheck size={18} className="text-green-600" /> 1. Objeto da Parceria
+            </h4>
+            <p>O presente termo estabelece as condições para que o Parceiro atue na prospecção e indicação de detentores de ativos judiciais para a Valor Precatório. Esta relação é de natureza autônoma e não configura vínculo empregatício.</p>
+          </section>
+
+          <section>
+            <h4 className="font-bold text-slate-900 mb-2">2. Remuneração e Comissões</h4>
+            <p>As comissões serão devidas exclusivamente sobre negócios efetivamente concluídos, com escritura assinada e liquidação financeira. Os percentuais variam conforme a natureza do ativo e serão acordados previamente à conclusão de cada caso.</p>
+          </section>
+
+          <section>
+            <h4 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
+              <BellRing size={18} className="text-blue-600" /> 3. Comunicações e LGPD
+            </h4>
+            <p>Ao aceitar este termo, você autoriza expressamente a Valor Precatório a enviar comunicações via WhatsApp e E-mail sobre o status das suas indicações e atualizações do programa. Seus dados e os dos indicados serão tratados conforme a Lei Geral de Proteção de Dados.</p>
+          </section>
+
+          <section>
+            <h4 className="font-bold text-slate-900 mb-2">4. Ética e Sigilo</h4>
+            <p>O parceiro compromete-se a não realizar promessas de valores de compra sem a prévia avaliação da Valor Precatório e a manter sigilo absoluto sobre informações comerciais internas.</p>
+          </section>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 text-right">
+          <button 
+            onClick={onClose}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-xl font-bold transition-all shadow-md active:scale-95"
+          >
+            Entendi e Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PartnersPage: React.FC = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [isTermsOpen, setIsTermsOpen] = useState(false); // Estado para o Modal
   
-  // Estado para capturar dados do formulário
   const [formData, setFormData] = useState<PartnerDTO>({
     nome: '',
     telefone: '',
@@ -187,10 +247,16 @@ const PartnersPage: React.FC = () => {
                     <textarea name="descricao" value={formData.descricao} onChange={handleChange} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" rows={3} placeholder="Descreva brevemente como pretende indicar clientes..."></textarea>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <input required type="checkbox" id="terms" className="mt-1 w-4 h-4 text-yellow-500 rounded border-gray-300 focus:ring-yellow-500" />
-                    <label htmlFor="terms" className="text-sm text-slate-600">
-                      Li e aceito os Termos de Parceria e concordo em receber comunicações sobre o programa.
+                  <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <input required type="checkbox" id="terms" className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                    <label htmlFor="terms" className="text-sm text-slate-600 leading-relaxed cursor-pointer">
+                      Li e aceito os <button 
+                        type="button" 
+                        onClick={() => setIsTermsOpen(true)} 
+                        className="text-blue-600 font-bold underline hover:text-blue-800 transition-colors"
+                      >
+                        Termos de Parceria
+                      </button> e concordo em receber comunicações sobre o programa.
                     </label>
                   </div>
 
@@ -210,6 +276,9 @@ const PartnersPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* MODAL DE TERMOS */}
+      <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
     </div>
   );
 };

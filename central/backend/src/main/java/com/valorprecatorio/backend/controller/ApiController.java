@@ -9,10 +9,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // Permite acesso do React
+@CrossOrigin(origins = "*")
 public class ApiController {
 
     private final GeminiService geminiService;
@@ -23,64 +25,57 @@ public class ApiController {
         this.emailService = emailService;
     }
 
-    // --- ROTA 1: CHATBOT ---
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chat(@RequestBody ChatRequest request) {
         if (request.getMessage() == null || request.getMessage().isBlank()) {
-            return Flux.just("Erro: Mensagem vazia.");
+            return Flux.just("data: Erro: Mensagem vazia.");
         }
         return geminiService.streamChat(request.getHistory(), request.getMessage());
     }
 
-    // --- ROTA 2: PROPOSTA (Atualizada com TODOS os campos) ---
     @PostMapping("/proposal")
-    public ResponseEntity<String> sendProposal(@RequestBody ProposalRequest request) {
-        // Validação básica
+    public Mono<ResponseEntity<String>> sendProposal(@RequestBody ProposalRequest request) {
+        System.out.println("📩 Recebendo proposta de: " + request.getNome());
+
         if (request.getNome() == null || request.getTelefone() == null) {
-            return ResponseEntity.badRequest().body("Campos obrigatórios faltando.");
+            return Mono.just(ResponseEntity.badRequest().body("Campos obrigatórios faltando."));
         }
 
-        try {
-            // Agora passamos TUDO, inclusive o e-mail do cliente
+        return Mono.fromRunnable(() -> {
             emailService.enviarNotificacaoProposta(
                 request.getNome(),
                 request.getTelefone(),
                 request.getValorEstimado(),
-                request.getEmail(), // <--- ADICIONADO
+                request.getEmail(),
                 request.getMensagem()
             );
-            return ResponseEntity.ok("Proposta enviada com sucesso!");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Erro ao enviar e-mail.");
-        }
+        }).subscribeOn(Schedulers.boundedElastic()) 
+          .thenReturn(ResponseEntity.ok("Proposta enviada com sucesso!"))
+          .onErrorResume(e -> Mono.just(ResponseEntity.internalServerError().body("Erro: " + e.getMessage())));
     }
 
-    // --- ROTA 3: PARCEIRO (Atualizada com TODOS os campos) ---
     @PostMapping("/partner")
-    public ResponseEntity<String> registerPartner(@RequestBody PartnerRequest request) {
-        // Validação básica
+    public Mono<ResponseEntity<String>> registerPartner(@RequestBody PartnerRequest request) {
+        System.out.println("🤝 Recebendo cadastro de parceiro: " + request.getNome());
+
         if (request.getNome() == null || request.getCpfCnpj() == null) {
-            return ResponseEntity.badRequest().body("Nome e CPF/CNPJ são obrigatórios.");
+            return Mono.just(ResponseEntity.badRequest().body("Nome e CPF/CNPJ são obrigatórios."));
         }
 
-        try {
-            // Passando TODOS os 9 campos para o serviço de e-mail montar a ficha completa
+        return Mono.fromRunnable(() -> {
             emailService.enviarNotificacaoParceiro(
                 request.getNome(),
                 request.getTelefone(),
-                request.getEmail(),             // <--- ADICIONADO
-                request.getCpfCnpj(),           // <--- ADICIONADO
-                request.getCidadeEstado(),      // <--- ADICIONADO
+                request.getEmail(),
+                request.getCpfCnpj(),
+                request.getCidadeEstado(),
                 request.getProfissao(),
-                request.getAtuaComPrecatorios(),// <--- ADICIONADO
-                request.getMediaLeads(),        // <--- ADICIONADO
-                request.getDescricao()          // <--- ADICIONADO
+                request.getAtuaComPrecatorios(),
+                request.getMediaLeads(),
+                request.getDescricao()
             );
-            return ResponseEntity.ok("Cadastro de parceiro recebido!");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Erro ao processar cadastro.");
-        }
+        }).subscribeOn(Schedulers.boundedElastic())
+          .thenReturn(ResponseEntity.ok("Cadastro de parceiro recebido!"))
+          .onErrorResume(e -> Mono.just(ResponseEntity.internalServerError().body("Erro: " + e.getMessage())));
     }
 }
