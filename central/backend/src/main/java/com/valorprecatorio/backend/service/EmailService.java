@@ -26,7 +26,7 @@ public class EmailService {
 
     public void enviarNotificacaoProposta(String nome, String telefone, String valor, String emailCliente, String mensagemCliente) {
         try {
-            System.out.println("Tentando enviar e-mail via API para: " + destinatarioFinal);
+            System.out.println("Iniciando tentativa de envio de proposta para: " + destinatarioFinal);
             
             String corpo = String.format("""
                 ================================================
@@ -49,17 +49,15 @@ public class EmailService {
                 """, nome, telefone, emailCliente, valor, mensagemCliente);
 
             enviarPelaAPI("💰 Nova Proposta: " + nome, corpo);
-            System.out.println("✅ Sucesso ao enviar e-mail de proposta.");
         } catch (Exception e) {
-            System.err.println("❌ Erro no envio da proposta: " + e.getMessage());
-            throw e;
+            System.err.println("❌ Erro ao preparar proposta: " + e.getMessage());
         }
     }
 
     public void enviarNotificacaoParceiro(String nome, String telefone, String email, String cpfCnpj, 
                                           String cidade, String profissao, String atua, String leads, String desc) {
         try {
-            System.out.println("Tentando enviar e-mail de parceiro via API...");
+            System.out.println("Iniciando tentativa de envio de e-mail de Parceiro...");
 
             String corpo = String.format("""
                 ================================================
@@ -86,14 +84,13 @@ public class EmailService {
                 """, nome, telefone, email, cpfCnpj, cidade, profissao, atua, leads, desc);
 
             enviarPelaAPI("🤝 Novo Cadastro de Parceiro: " + nome, corpo);
-            System.out.println("✅ Sucesso ao enviar e-mail de parceiro.");
         } catch (Exception e) {
-            System.err.println("❌ Erro ao enviar parceiro: " + e.getMessage());
-            throw e;
+            System.err.println("❌ Erro ao preparar parceiro: " + e.getMessage());
         }
     }
 
     private void enviarPelaAPI(String subject, String content) {
+        // Usamos .subscribe() em vez de .block() para não travar a thread do WebFlux
         webClient.post()
             .uri("/emails")
             .header("Authorization", "Bearer " + resendApiKey)
@@ -105,6 +102,9 @@ public class EmailService {
             ))
             .retrieve()
             .bodyToMono(String.class)
-            .block();
+            .subscribe(
+                response -> System.out.println("✅ E-mail enviado com sucesso: " + response),
+                error -> System.err.println("❌ Falha no envio da API Resend: " + error.getMessage())
+            );
     }
 }
