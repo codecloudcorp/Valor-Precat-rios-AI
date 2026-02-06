@@ -1,6 +1,5 @@
 package com.valorprecatorio.backend.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -9,15 +8,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
-    // Destinatário fixo
-    private static final String DESTINATARIO_FINAL = "contato@valorprecatorio.adv.br";
+    // Agora o destinatário é lido das configurações
+    @Value("${app.mail.destinatario}")
+    private String destinatarioFinal;
 
     // Remetente configurado no application.properties
     @Value("${spring.mail.username}")
     private String remetente;
+
+    // Injeção via construtor (mais robusto)
+    public EmailService(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     /**
      * E-mail para PROPOSTA (Venda de Precatório)
@@ -26,7 +30,7 @@ public class EmailService {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(remetente);
-            message.setTo(DESTINATARIO_FINAL);
+            message.setTo(destinatarioFinal);
             message.setSubject("💰 Nova Proposta: " + nome);
             
             String corpo = String.format("""
@@ -66,7 +70,7 @@ public class EmailService {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(remetente);
-            message.setTo(DESTINATARIO_FINAL);
+            message.setTo(destinatarioFinal);
             message.setSubject("🤝 Novo Cadastro de Parceiro: " + nome);
 
             String corpo = String.format("""
