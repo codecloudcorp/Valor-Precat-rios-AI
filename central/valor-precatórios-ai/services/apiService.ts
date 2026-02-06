@@ -1,7 +1,7 @@
 import { ChatMessage, PartnerDTO, ProposalDTO } from "../types";
 
-const API_URL = "http://localhost:3001/api";
-
+// Usa a variável de ambiente se existir (Produção), senão usa localhost (Desenvolvimento)
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 export const apiService = {
   // 1. Chatbot com Streaming
   async sendMessageStream(history: { role: string; parts: { text: string }[] }[], message: string): Promise<ReadableStreamDefaultReader<Uint8Array>> {

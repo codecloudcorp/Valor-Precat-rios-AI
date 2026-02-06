@@ -1,5 +1,6 @@
 package com.valorprecatorio.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -7,29 +8,28 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class CorsConfig {
+
+    // Lê a variável 'cors.allowed.origins' do application.properties ou Variável de Ambiente
+    @Value("${cors.allowed.origins}")
+    private String allowedOrigins;
 
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
         
-        // 1. Origens permitidas (Localhost para testes + Seus domínios de produção)
-        config.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000", 
-            "https://valorprecatorio.adv.br", 
-            "https://valor-precatorios-ai.vercel.app"
-        ));
+        // Separa a string por vírgula e remove espaços em branco
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        config.setAllowedOrigins(origins);
         
-        // 2. Métodos e Headers permitidos
-        config.addAllowedMethod("*"); // GET, POST, OPTIONS, etc.
-        config.addAllowedHeader("*"); // Content-Type, Authorization, etc.
+        config.addAllowedMethod("*");
+        config.addAllowedHeader("*");
         
-        // 3. Credenciais (opcional - deixe comentado se não usar cookies/sessão)
         // config.setAllowCredentials(true);
 
-        // 4. Aplica a configuração a todas as rotas
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
