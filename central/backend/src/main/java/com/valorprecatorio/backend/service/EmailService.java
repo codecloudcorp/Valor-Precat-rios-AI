@@ -10,24 +10,20 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    // Agora o destinatário é lido das configurações
     @Value("${app.mail.destinatario}")
     private String destinatarioFinal;
 
-    // Remetente configurado no application.properties
     @Value("${spring.mail.username}")
     private String remetente;
 
-    // Injeção via construtor (mais robusto)
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
-    /**
-     * E-mail para PROPOSTA (Venda de Precatório)
-     */
     public void enviarNotificacaoProposta(String nome, String telefone, String valor, String emailCliente, String mensagemCliente) {
         try {
+            System.out.println("Iniciando tentativa de envio de e-mail para: " + destinatarioFinal);
+            
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(remetente);
             message.setTo(destinatarioFinal);
@@ -54,20 +50,24 @@ public class EmailService {
                 """, nome, telefone, emailCliente, valor, mensagemCliente);
 
             message.setText(corpo);
+            
+            // O comando abaixo é onde o timeout acontece
             mailSender.send(message);
+            
             System.out.println("✅ E-mail de proposta enviado com sucesso.");
         } catch (Exception e) {
-            System.err.println("❌ Erro ao enviar proposta: " + e.getMessage());
+            System.err.println("❌ Erro fatal no envio de e-mail: " + e.getMessage());
+            // Mantemos o throw para o Controller saber que falhou, 
+            // mas agora temos logs melhores antes do erro.
             throw e;
         }
     }
 
-    /**
-     * E-mail para PARCEIRO (Formulário Completo)
-     */
     public void enviarNotificacaoParceiro(String nome, String telefone, String email, String cpfCnpj, 
                                           String cidade, String profissao, String atua, String leads, String desc) {
         try {
+            System.out.println("Iniciando tentativa de envio de e-mail de Parceiro...");
+            
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(remetente);
             message.setTo(destinatarioFinal);
