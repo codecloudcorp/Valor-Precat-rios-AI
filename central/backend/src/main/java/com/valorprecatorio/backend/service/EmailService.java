@@ -14,11 +14,11 @@ public class EmailService {
     @Value("${app.mail.destinatario}")
     private String destinatarioFinal;
 
-    @Value("${resend.api.key}")
-    private String resendApiKey;
+    @Value("${spring.mail.username}")
+    private String remetenteOriginal;
 
-    @Value("${resend.sender}")
-    private String remetenteResend;
+    @Value("${spring.mail.password}")
+    private String resendApiKey;
 
     public EmailService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl("https://api.resend.com").build();
@@ -26,7 +26,7 @@ public class EmailService {
 
     public void enviarNotificacaoProposta(String nome, String telefone, String valor, String emailCliente, String mensagemCliente) {
         try {
-            System.out.println("Iniciando tentativa de envio de e-mail (API) para: " + destinatarioFinal);
+            System.out.println("Tentando enviar e-mail via API para: " + destinatarioFinal);
             
             String corpo = String.format("""
                 ================================================
@@ -48,10 +48,10 @@ public class EmailService {
                 Enviado via Sistema Valor Precatório AI
                 """, nome, telefone, emailCliente, valor, mensagemCliente);
 
-            enviarViaResend("💰 Nova Proposta: " + nome, corpo);
-            System.out.println("✅ E-mail de proposta enviado com sucesso.");
+            enviarPelaAPI("💰 Nova Proposta: " + nome, corpo);
+            System.out.println("✅ Sucesso ao enviar e-mail de proposta.");
         } catch (Exception e) {
-            System.err.println("❌ Erro fatal no envio de e-mail: " + e.getMessage());
+            System.err.println("❌ Erro no envio da proposta: " + e.getMessage());
             throw e;
         }
     }
@@ -59,7 +59,7 @@ public class EmailService {
     public void enviarNotificacaoParceiro(String nome, String telefone, String email, String cpfCnpj, 
                                           String cidade, String profissao, String atua, String leads, String desc) {
         try {
-            System.out.println("Iniciando tentativa de envio de e-mail de Parceiro (API)...");
+            System.out.println("Tentando enviar e-mail de parceiro via API...");
 
             String corpo = String.format("""
                 ================================================
@@ -85,20 +85,20 @@ public class EmailService {
                 Entre em contato para validar este parceiro.
                 """, nome, telefone, email, cpfCnpj, cidade, profissao, atua, leads, desc);
 
-            enviarViaResend("🤝 Novo Cadastro de Parceiro: " + nome, corpo);
-            System.out.println("✅ E-mail de parceiro enviado com sucesso.");
+            enviarPelaAPI("🤝 Novo Cadastro de Parceiro: " + nome, corpo);
+            System.out.println("✅ Sucesso ao enviar e-mail de parceiro.");
         } catch (Exception e) {
             System.err.println("❌ Erro ao enviar parceiro: " + e.getMessage());
             throw e;
         }
     }
 
-    private void enviarViaResend(String subject, String content) {
+    private void enviarPelaAPI(String subject, String content) {
         webClient.post()
             .uri("/emails")
             .header("Authorization", "Bearer " + resendApiKey)
             .bodyValue(Map.of(
-                "from", remetenteResend,
+                "from", "onboarding@resend.dev",
                 "to", List.of(destinatarioFinal),
                 "subject", subject,
                 "text", content
