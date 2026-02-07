@@ -83,7 +83,6 @@ const ChatAssistant: React.FC = () => {
         
         const chunk = decoder.decode(value, { stream: true });
         
-        // Limpeza aprimorada do protocolo SSE do Java (Data: content)
         const cleanChunk = chunk
             .split('\n')
             .filter(line => line.startsWith('data:'))
@@ -168,14 +167,16 @@ const ChatAssistant: React.FC = () => {
       </div>
 
       {/* Input & Quick Actions */}
-      <div className="bg-white border-t border-slate-200">
-        <div className="px-4 pt-3 pb-1 overflow-x-auto flex gap-2 scrollbar-hide">
+      <div className="bg-white border-t border-slate-200 w-full">
+        
+        {/* CORREÇÃO: Container de rolagem horizontal corrigido */}
+        <div className="w-full overflow-x-auto flex gap-2 px-4 py-3 touch-pan-x">
             {quickQuestions.map((q, idx) => (
                 <button 
                     key={idx}
                     onClick={() => handleSend(q)}
                     disabled={isLoading}
-                    className="flex-shrink-0 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-2 rounded-full border border-blue-100 transition-colors flex items-center gap-1 whitespace-nowrap"
+                    className="flex-shrink-0 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-4 py-2 rounded-full border border-blue-100 transition-colors flex items-center gap-1 whitespace-nowrap"
                 >
                     <Sparkles size={12} />
                     {q}
@@ -183,7 +184,7 @@ const ChatAssistant: React.FC = () => {
             ))}
         </div>
 
-        <div className="p-4">
+        <div className="p-4 pt-2">
             <div className="max-w-4xl mx-auto relative flex items-end gap-2">
             <div className="flex-1 relative">
                 <textarea
