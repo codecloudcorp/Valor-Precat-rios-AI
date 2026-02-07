@@ -1,11 +1,20 @@
 import { PartnerDTO, ProposalDTO } from "../types";
+import emailjs from '@emailjs/browser';
 
-// Usa a variável de ambiente se existir (Produção), senão usa localhost (Desenvolvimento)
+// URL do Backend Java (Mantido para o Chatbot)
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-// src/services/apiService.ts
+
+// ⚠️ CONFIGURAÇÃO DO EMAILJS (Crie conta grátis em emailjs.com)
+// O plano grátis permite 200 e-mails/mês usando seu próprio Gmail.
+// Preencha com as chaves que você pegar no painel do EmailJS.
+const EMAILJS_SERVICE_ID = "service_xxxxxxx"; // Ex: service_gmail
+const EMAILJS_TEMPLATE_PROPOSTA = "template_xxxxxxx"; // Crie um template para Proposta
+const EMAILJS_TEMPLATE_PARCEIRO = "template_xxxxxxx"; // Crie um template para Parceiro
+const EMAILJS_PUBLIC_KEY = "xxxxxxxxxxxxxx"; // Sua Public Key
 
 export const apiService = {
-  // 1. Chatbot com Streaming
+
+  // 1. Chatbot com Streaming (Continua usando o Java/Gemini)
   async sendMessageStream(history: { role: string; parts: { text: string }[] }[], message: string): Promise<ReadableStreamDefaultReader<Uint8Array>> {
     const response = await fetch(`${API_URL}/chat`, {
       method: 'POST',
@@ -20,45 +29,60 @@ export const apiService = {
     return response.body.getReader();
   },
 
-  // 2. Enviar Proposta - SINCRONIZADO COM O JAVA
+  // 2. Enviar Proposta (AGORA VIA FRONTEND - IGNORA O RAILWAY)
   async sendProposal(data: ProposalDTO): Promise<void> {
-    const response = await fetch(`${API_URL}/proposal`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // Mapeamos os dados do DTO para as variáveis {{variavel}} do seu template no EmailJS
+    const templateParams = {
+        to_name: "Dra. Sacha",
         nome: data.nome,
         telefone: data.telefone,
         email: data.email,
-        valorEstimado: data.valorEstimado, // Nome exato no ProposalRequest.java
-        mensagem: data.mensagem            // Nome exato no ProposalRequest.java
-      })
-    });
+        valor: data.valorEstimado,
+        mensagem: data.mensagem
+    };
 
-    if (!response.ok) {
-      throw new Error("Falha ao enviar proposta");
+    try {
+        console.log("📨 Enviando proposta via EmailJS...");
+        await emailjs.send(
+            EMAILJS_SERVICE_ID, 
+            EMAILJS_TEMPLATE_PROPOSTA, 
+            templateParams, 
+            EMAILJS_PUBLIC_KEY
+        );
+        console.log("✅ Proposta enviada com sucesso!");
+    } catch (error) {
+        console.error("❌ Erro ao enviar via EmailJS:", error);
+        throw new Error("Falha ao enviar proposta. Verifique a conexão.");
     }
   },
 
-  // 3. Cadastrar Parceiro - SINCRONIZADO COM O JAVA
+  // 3. Cadastrar Parceiro (AGORA VIA FRONTEND - IGNORA O RAILWAY)
   async registerPartner(data: PartnerDTO): Promise<void> {
-    const response = await fetch(`${API_URL}/partner`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const templateParams = {
+        to_name: "Dra. Sacha",
         nome: data.nome,
         telefone: data.telefone,
         email: data.email,
-        cpfCnpj: data.cpfCnpj,
-        cidadeEstado: data.cidadeEstado, // Nome exato no PartnerRequest.java
+        cpf_cnpj: data.cpfCnpj,
+        cidade: data.cidadeEstado,
         profissao: data.profissao,
-        atuaComPrecatorios: data.atuaComPrecatorios, // Nome exato no PartnerRequest.java
-        mediaLeads: data.mediaLeads,
+        atua: data.atuaComPrecatorios,
+        leads: data.mediaLeads,
         descricao: data.descricao
-      })
-    });
+    };
 
-    if (!response.ok) {
-      throw new Error("Falha ao cadastrar parceiro");
+    try {
+        console.log("📨 Enviando parceiro via EmailJS...");
+        await emailjs.send(
+            EMAILJS_SERVICE_ID, 
+            EMAILJS_TEMPLATE_PARCEIRO, 
+            templateParams, 
+            EMAILJS_PUBLIC_KEY
+        );
+        console.log("✅ Parceiro enviado com sucesso!");
+    } catch (error) {
+        console.error("❌ Erro ao enviar via EmailJS:", error);
+        throw new Error("Falha ao cadastrar parceiro.");
     }
   }
 };
